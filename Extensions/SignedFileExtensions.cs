@@ -3,8 +3,6 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
-using Org.BouncyCastle.Cms;
-using Org.BouncyCastle.X509.Store;
 
 namespace FatturaElettronica.Extensions
 {
@@ -18,7 +16,7 @@ namespace FatturaElettronica.Extensions
                 using var inputStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                 ReadXmlSigned(fattura, inputStream, validateSignature);
             }
-            catch (CmsException)
+            catch (CryptographicException)
             {
                 ReadXmlSignedBase64(fattura, filePath, validateSignature);
             }
@@ -57,36 +55,44 @@ namespace FatturaElettronica.Extensions
         }
         public static MemoryStream ParseSignature(Stream stream, bool validateSignature)
         {
-            var signedFile = new CmsSignedData(stream);
+            var fileContent = ReadAllBytes(stream);
+            var content = new ContentInfo(fileContent);
+            var signedFile = new SignedCms(SubjectIdentifierType.IssuerAndSerialNumber, content, false);
+            signedFile.Decode(fileContent);
+
             if (validateSignature)
             {
-                var certStore = signedFile.GetCertificates("Collection");
-                var certs = certStore.GetMatches(new X509CertStoreSelector());
-                var signerStore = signedFile.GetSignerInfos();
-                var signers = signerStore.GetSigners();
-
-                foreach (var tempCertification in certs)
+                try
                 {
-                    var certification = tempCertification as Org.BouncyCastle.X509.X509Certificate;
-
-                    foreach (var tempSigner in signers)
-                    {
-                        var signer = tempSigner as SignerInformation;
-                        if (!signer.Verify(certification.GetPublicKey()))
-                        {
-                            throw new SignatureException(Resources.ErrorMessages.SignatureException);
-                        }
-                    }
+                    signedFile.CheckSignature(true);
+                }
+                catch (CryptographicException ce)
+                {
+                    throw new SignatureException(Resources.ErrorMessages.SignatureException, ce);
                 }
             }
 
             var memoryStream = new MemoryStream();
-            signedFile.SignedContent.Write(memoryStream);
+            memoryStream.Write(signedFile.ContentInfo.Content, 0, signedFile.ContentInfo.Content.Length);
             return memoryStream;
+
+            static byte[] ReadAllBytes(Stream stream)
+            {
+                if (stream is MemoryStream mem)
+                    return mem.ToArray();
+
+                using var ms = new MemoryStream();
+                var buffer = new byte[8192];
+                int bytesRead;
+
+                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                    ms.Write(buffer, 0, bytesRead);
+
+                return ms.ToArray();
+            }
         }
 
-        public static void WriteXmlSigned(this FatturaBase fattura, string pfxFile, string pfxPassword,
-            string p7mFilePath)
+        public static void WriteXmlSigned(this FatturaBase fattura, string pfxFile, string pfxPassword, string p7mFilePath)
         {
             if (!File.Exists(pfxFile))
                 throw new SignatureException(Resources.ErrorMessages.PfxIsMissing);
@@ -115,31 +121,8 @@ namespace FatturaElettronica.Extensions
                     DigestAlgorithm = new("2.16.840.1.101.3.4.2.1", "SHA256")
                 };
                 signer.SignedAttributes.Add(new Pkcs9SigningTime(DateTime.Now));
-                try
-                {
-                    //PKCS7 format
-                    signedCms.ComputeSignature(signer, false);
-                }
-                catch (CryptographicException cex)
-                {
-                    //To evaluate for the future https://stackoverflow.com/a/52897100
-
-                    /*
-                    // Try re-importing the private key into a better CSP:
-                    using (RSA tmpRsa = RSA.Create())
-                    {
-                        tmpRsa.ImportParameters(cert.GetRSAPrivateKey().ExportParameters(true));
-
-                        using (X509Certificate2 tmpCertNoKey = new X509Certificate2(cert.RawData))
-                        using (X509Certificate2 tmpCert = tmpCertNoKey.CopyWithPrivateKey(tmpRsa))
-                        {
-                            signer.Certificate = tmpCert;
-                            signedCms.ComputeSignature(signer, false);
-                        }
-                    }*/
-
-                    throw cex;
-                }
+                //PKCS7 format
+                signedCms.ComputeSignature(signer, false);
 
                 var signature = signedCms.Encode();
                 File.WriteAllBytes(p7mFilePath, signature);
