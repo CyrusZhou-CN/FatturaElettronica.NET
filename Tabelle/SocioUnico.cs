@@ -1,17 +1,9 @@
-﻿namespace FatturaElettronica.Tabelle
+﻿using System.Resources;
+
+namespace FatturaElettronica.Tabelle
 {
-    public class SocioUnico : Tabella
+    public class SocioUnico : Tabella<SocioUnico>
     {
-        public override Tabella[] List
-        {
-            get
-            {
-                return new Tabella[]
-                {
-                    new SocioUnico { Codice = "SU", Nome = "Socio unico" },
-                    new SocioUnico { Codice = "SM", Nome = "Più soci" }
-                };
-            }
-        }
+        protected override ResourceManager ResourceManager => Resources.SocioUnico.ResourceManager;
     }
 }

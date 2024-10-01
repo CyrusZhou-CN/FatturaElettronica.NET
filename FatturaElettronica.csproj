@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <VersionPrefix>3.4.16</VersionPrefix>
+    <VersionPrefix>3.5.1</VersionPrefix>
     <PackageId>FatturaElettronica</PackageId>
     <Authors>Nicola Iarocci</Authors>
     <Company>CIR 2000</Company>
@@ -30,6 +30,11 @@
     <EmbeddedResource Remove="Test\**"/>
     <None Remove="Tests\**"/>
     <None Remove="Test\**"/>
+
+    <EmbeddedResource Update="Resources\**\*.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>%(Filename).Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

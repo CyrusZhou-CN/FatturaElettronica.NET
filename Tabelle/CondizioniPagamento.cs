@@ -1,17 +1,9 @@
-﻿namespace FatturaElettronica.Tabelle
+﻿using System.Resources;
+
+namespace FatturaElettronica.Tabelle
 {
-    public class CondizioniPagamento : Tabella
+    public class CondizioniPagamento : Tabella<CondizioniPagamento>
     {
-        public override Tabella[] List
-        {
-            get
-            {
-                return new Tabella[] {
-                    new CondizioniPagamento { Codice = "TP01", Nome = "pagamento a rate" },
-                    new CondizioniPagamento { Codice = "TP02", Nome = "pagamento completo" },
-                    new CondizioniPagamento { Codice = "TP03", Nome = "anticipo" },
-                };
-            }
-        }
+        protected override ResourceManager ResourceManager => Resources.CondizioniPagamento.ResourceManager;
     }
 }

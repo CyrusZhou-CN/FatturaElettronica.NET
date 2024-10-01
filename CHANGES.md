@@ -2,9 +2,25 @@
 
 ## In Development
 
-- *hic sunt leones*
- 
+- hic sunt leones
+
 ## Stable
+
+### v 3.5.1
+
+Released on September 30, 2024
+
+- fix: multi-lingua, migliorata accessibilità dei Resource file generati ([#420][420])
+ 
+[420]: https://github.com/FatturaElettronica/FatturaElettronica.NET/pull/420
+ 
+### v 3.5.0
+
+Released on September 30, 2024
+
+- new: supporto multi-lingua ([#417][417]).
+
+[417]: https://github.com/FatturaElettronica/FatturaElettronica.NET/pull/417
 
 ### v 3.4.16
 

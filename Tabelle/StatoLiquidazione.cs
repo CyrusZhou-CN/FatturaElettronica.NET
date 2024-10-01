@@ -1,16 +1,9 @@
-﻿namespace FatturaElettronica.Tabelle
+﻿using System.Resources;
+
+namespace FatturaElettronica.Tabelle
 {
-    public class StatoLiquidazione : Tabella
+    public class StatoLiquidazione : Tabella<StatoLiquidazione>
     {
-        public override Tabella[] List
-        {
-            get
-            {
-                return new Tabella[] {
-                    new StatoLiquidazione { Codice = "LS", Nome = "In liquidazione" },
-                    new StatoLiquidazione { Codice = "LN", Nome = "Non in liquidazione" }
-                };
-            }
-        }
+        protected override ResourceManager ResourceManager => Resources.StatoLiquidazione.ResourceManager;
     }
 }
